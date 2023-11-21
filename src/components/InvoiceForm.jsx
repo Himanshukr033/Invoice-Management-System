@@ -68,6 +68,7 @@ const InvoiceForm = () => {
 
   useEffect(() => {
     handleCalculateTotal();
+    
   }, []);
 
   const handleRowDel = (itemToDelete) => {
@@ -76,6 +77,7 @@ const InvoiceForm = () => {
     );
     setFormData({ ...formData, items: updatedItems });
     handleCalculateTotal();
+
   };
 
   const handleAddEvent = () => {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Card, Col, Row, Table } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { BiSolidPencil, BiTrash } from "react-icons/bi";
@@ -8,12 +8,16 @@ import { useNavigate } from "react-router-dom";
 import { useInvoiceListData } from "../redux/hooks";
 import { useDispatch } from "react-redux";
 import { deleteInvoice } from "../redux/invoicesSlice";
+import InputGroup from 'react-bootstrap/InputGroup';
 
 const InvoiceList = () => {
   const { invoiceList, getOneInvoice } = useInvoiceListData();
   const isListEmpty = invoiceList.length === 0;
   const [copyId, setCopyId] = useState("");
   const navigate = useNavigate();
+  const [selectedInvoices, setSelectedInvoices] = useState([]);
+
+
   const handleCopyClick = () => {
     const invoice = getOneInvoice(copyId);
     if (!invoice) {
@@ -21,6 +25,27 @@ const InvoiceList = () => {
     } else {
       navigate(`/create/${copyId}`);
     }
+  };
+  const handleMultiEdit = () => {
+  if (selectedInvoices.length <2) {
+    alert("Please select at least two invoice for bulk edit. 😓");
+  } else {
+    
+    console.log("Selected Invoices for Multi-Edit:", selectedInvoices.length);
+  }  
+  };
+
+  const handleCheckboxChange  = (e,invoiceId) => {
+    let isSelected = e.target.checked;
+
+    if(isSelected){
+      setSelectedInvoices([...selectedInvoices, invoiceId]);
+    }
+    else{    
+    setSelectedInvoices(prev => {
+        return prev.filter(id => id !== invoiceId);  
+      } 
+      )}
   };
 
   return (
@@ -42,6 +67,11 @@ const InvoiceList = () => {
                 <Link to="/create">
                   <Button variant="primary mb-2 mb-md-4">Create Invoice</Button>
                 </Link>
+
+                <div className="d-flex gap-2">         
+                  <Button variant="primary mb-2 mb-md-4" onClick={handleMultiEdit}>Mult-Edit</Button>
+                  <h6 className=" pt-3 " style={{color: "gray"}}> {selectedInvoices.length} selected</h6>
+                </div>
 
                 <div className="d-flex gap-2">
                   <Button variant="dark mb-2 mb-md-4" onClick={handleCopyClick}>
@@ -76,6 +106,8 @@ const InvoiceList = () => {
                       key={invoice.id}
                       invoice={invoice}
                       navigate={navigate}
+                      onCheckboxChange={handleCheckboxChange}
+                      selectedInvoices = {selectedInvoices}                       
                     />
                   ))}
                 </tbody>
@@ -88,8 +120,11 @@ const InvoiceList = () => {
   );
 };
 
-const InvoiceRow = ({ invoice, navigate }) => {
+const InvoiceRow = ({ invoice, navigate, onCheckboxChange, selectedInvoices }) => {
   const [isOpen, setIsOpen] = useState(false);
+  function handleChange(e) {
+    onCheckboxChange(e, invoice.id) 
+  }
   const dispatch = useDispatch();
 
   const handleDeleteClick = (invoiceId) => {
@@ -138,6 +173,16 @@ const InvoiceRow = ({ invoice, navigate }) => {
             <BsEyeFill />
           </div>
         </Button>
+      </td>
+      <td style={{ width: "5%" }}>
+        
+      <InputGroup className="mb-2">
+        <InputGroup.Checkbox 
+        aria-label="Checkbox for invoice"
+        checked={selectedInvoices.includes(invoice.id)}
+        onChange={handleChange}
+        id = {invoice.id} />
+      </InputGroup>
       </td>
       <InvoiceModal
         showModal={isOpen}
