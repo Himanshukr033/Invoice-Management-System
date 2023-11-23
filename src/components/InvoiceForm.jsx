@@ -87,8 +87,6 @@ useEffect(() => {
    
     
       setSelectedInvoices(invoices);
-      console.log(selectedInvoices);
-      console.log(formData);
     
   }
 }, []);
@@ -161,10 +159,23 @@ useEffect(() => {
       }
       return oldItem;
     });
-
+  
     setFormData({ ...formData, items: updatedItems });
     handleCalculateTotal();
+  
+    if (isMultiEdit) {
+      setSelectedInvoices((prevInvoices) =>
+        prevInvoices.map((invoice) => ({
+          ...invoice,
+          items: [...formData.items], 
+        }))
+      );
+    }
   };
+  
+  
+  
+  
 
   const editField = (name, value) => {
     
@@ -174,11 +185,11 @@ useEffect(() => {
   };
   
   const updateValues = ({target, data}) => {
-    console.log(target,data);
+    //console.log(target,data);
     setSelectedInvoices((prevData) =>
       prevData.map((prev) => ({ ...prev, [target]: data }))
     );
-    console.log(selectedInvoices);
+    //console.log(selectedInvoices);
 
   }
 
@@ -200,7 +211,14 @@ useEffect(() => {
     if (isEdit) {
       dispatch(updateInvoice({ id: params.id, updatedInvoice: formData }));
       alert("Invoice updated successfuly 🥳");
-    } else if (isCopy) {
+    }
+    else if (isMultiEdit) {
+      selectedInvoices.forEach((invoice) => {
+        dispatch(updateInvoice({ id: invoice.id, updatedInvoice: invoice }));
+      });
+      alert("Invoice updated successfully 🥳");
+    }
+    else if (isCopy) {
       dispatch(addInvoice({ id: generateRandomId(), ...formData }));
       alert("Invoice added successfuly 🥳");
     } else {
@@ -249,19 +267,22 @@ useEffect(() => {
                   <span className="fw-bold d-block me-2">Due&nbsp;Date:</span>
                   <Form.Control
                     type="date"
-                    value={(isMultiEdit?"":selectedInvoices.dateOfIssue)}
+                    value={formData.dateOfIssue}
                     name="dateOfIssue"
-                    onChange={(e) => editField(e.target.name, e.target.value)}
+                    onChange={(e) => {
+                      isMultiEdit ? updateValues(e.target.name, e.target.value) : editField(e.target.name, e.target.value);
+                    }}
                     style={{ maxWidth: "150px" }}
                     required
                   />
+
                 </div>
               </div>
               <div className="d-flex flex-row align-items-center">
                 <span className="fw-bold me-2">Invoice&nbsp;Number:&nbsp;</span>
                 <Form.Control
                   type="text"  
-                  value={isMultiEdit ? (console.log(selectedInvoices),selectedInvoices.map((invoice) => invoice.invoiceNumber).join(",") ): formData.invoiceNumber}
+                  value={isMultiEdit ? (selectedInvoices.map((invoice) => invoice.invoiceNumber).join(",") ): formData.invoiceNumber}
                   name="invoiceNumber"
                   onChange={(e) => editField(e.target.name, e.target.value)}
                   style={{ maxWidth: "70px" }}
@@ -274,7 +295,7 @@ useEffect(() => {
               <Col>
                 <Form.Label className="fw-bold">Bill to:</Form.Label>
                 {isMultiEdit ? (
-                  console.log(selectedInvoices),
+                  
                   <DynamicDropdown invoicesData= {selectedInvoices} newValues = {updateValues} name ="billTo"/>
                 ) : 
                 (
@@ -292,7 +313,7 @@ useEffect(() => {
                 )
               }
               {isMultiEdit ? (
-                  console.log(selectedInvoices),
+                  
                   <DynamicDropdown invoicesData= {selectedInvoices} newValues = {updateValues} name ="billToEmail"/>
                 ) : 
                 (
@@ -309,7 +330,6 @@ useEffect(() => {
                 )
               }
                 {isMultiEdit ? (
-                  console.log(selectedInvoices),
                   <DynamicDropdown invoicesData= {selectedInvoices} newValues = {updateValues} name ="billToAddress"/>
                 ) : 
                 (
@@ -331,7 +351,6 @@ useEffect(() => {
               <Col>
                 <Form.Label className="fw-bold">Bill from:</Form.Label>
                 {isMultiEdit ? (
-                  console.log(selectedInvoices),
                   <DynamicDropdown invoicesData= {selectedInvoices} newValues = {updateValues} name ="billFrom"/>
                 ) : 
                 (
@@ -349,7 +368,6 @@ useEffect(() => {
                 )
               }
                  {isMultiEdit ? (
-                  console.log(selectedInvoices),
                   <DynamicDropdown invoicesData= {selectedInvoices} newValues = {updateValues} name ="billFromEmail"/>
                 ) : 
                 (
@@ -385,13 +403,15 @@ useEffect(() => {
                 
               </Col>
             </Row>
-            <InvoiceItem
-              onItemizedItemEdit={onItemizedItemEdit}
-              onRowAdd={handleAddEvent}
-              onRowDel={handleRowDel}
-              currency={formData.currency}
-              items={formData.items}
-            />
+        
+                  <InvoiceItem
+                  onItemizedItemEdit={onItemizedItemEdit}
+                  onRowAdd={handleAddEvent}
+                  onRowDel={handleRowDel}
+                  currency={formData.currency}
+                  items={formData.items}
+                />
+                
             <Row className="mt-4 justify-content-end">
               <Col lg={6}>
                 <div className="d-flex flex-row align-items-start justify-content-between">
