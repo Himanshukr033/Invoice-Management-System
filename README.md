@@ -16,7 +16,7 @@ Enhancing a simple invoice management system by adding a bulk edit feature, sele
 
 ## Demo
 
-! [Try the website here]([https://youtube033.netlify.app/](https://main--invoice-management-033.netlify.app/))
+! [Try the website here](https://main--invoice-management-033.netlify.app/)
 
 ## Installation
 
