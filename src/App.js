@@ -15,6 +15,7 @@ const App = () => {
           <Route path="/create" element={<Invoice />} />
           <Route path="/create/:id" element={<Invoice />} />
           <Route path="/edit/:id" element={<Invoice />} />
+          <Route path="/multiEdit/:id" element={<Invoice />} />
         </Routes>
       </Container>
     </div>

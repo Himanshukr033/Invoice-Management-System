@@ -11,11 +11,12 @@ import { deleteInvoice } from "../redux/invoicesSlice";
 import InputGroup from 'react-bootstrap/InputGroup';
 
 const InvoiceList = () => {
-  const { invoiceList, getOneInvoice } = useInvoiceListData();
+  const { invoiceList, getOneInvoice, getMultipleInvoices } = useInvoiceListData();
   const isListEmpty = invoiceList.length === 0;
   const [copyId, setCopyId] = useState("");
   const navigate = useNavigate();
   const [selectedInvoices, setSelectedInvoices] = useState([]);
+  const [checkAll, setCheckAll] = useState(false);
 
 
   const handleCopyClick = () => {
@@ -30,22 +31,53 @@ const InvoiceList = () => {
   if (selectedInvoices.length <2) {
     alert("Please select at least two invoice for bulk edit. 😓");
   } else {
-    
+    const invoices = getMultipleInvoices(selectedInvoices);
+    //console.log(invoices);
+
+      if(!invoices){
+        alert("Unknown error")
+      }
+      else{
+        const invoiceIds = invoices.map((invoice) => invoice.id);
+        const idsString = invoiceIds.join(",");
+        navigate(`/multiEdit/${idsString}`);
+      }
     console.log("Selected Invoices for Multi-Edit:", selectedInvoices.length);
   }  
   };
+  
+  const handleCheckAll = ()=>{
+    setCheckAll(prev => !prev);
+    invoiceList.map((invoice) => {
+      console.log(invoice, checkAll);
+      handleCheckboxChange(checkAll, invoice.id);
+    });    
+    
+  };
+
+  const handleDeleteAll = ()=>{
+
+
+  };
 
   const handleCheckboxChange  = (e,invoiceId) => {
-    let isSelected = e.target.checked;
+    let isSelected = e;
 
     if(isSelected){
-      setSelectedInvoices([...selectedInvoices, invoiceId]);
+      setSelectedInvoices(prev => {
+        if (!prev.includes(invoiceId)) {
+          return [...prev, invoiceId];
+        }
+        else return prev;
+      });
     }
     else{    
     setSelectedInvoices(prev => {
         return prev.filter(id => id !== invoiceId);  
       } 
       )}
+
+      console.log(selectedInvoices);
   };
 
   return (
@@ -68,9 +100,17 @@ const InvoiceList = () => {
                   <Button variant="primary mb-2 mb-md-4">Create Invoice</Button>
                 </Link>
 
-                <div className="d-flex gap-2">         
-                  <Button variant="primary mb-2 mb-md-4" onClick={handleMultiEdit}>Mult-Edit</Button>
-                  <h6 className=" pt-3 " style={{color: "gray"}}> {selectedInvoices.length} selected</h6>
+                <div className="d-flex gap-2">
+                  <Button
+                    variant="primary mb-2 mb-md-4"
+                    onClick={handleMultiEdit}
+                  >
+                    Mult-Edit
+                  </Button>
+                  <h6 className=" pt-3 " style={{ color: "gray" }}>
+                    {" "}
+                    {selectedInvoices.length} selected
+                  </h6>
                 </div>
 
                 <div className="d-flex gap-2">
@@ -98,6 +138,23 @@ const InvoiceList = () => {
                     <th>Due Date</th>
                     <th>Total Amt.</th>
                     <th>Actions</th>
+                    <th style={{ width: "5%",  }}>
+                      <Button
+                        variant="primary"
+                        onClick={handleCheckAll}
+                        style={{marginLeft:10}}
+                      >
+                        <div className="d-flex align-items-center justify-content-center gap-2">SelectAll</div>
+                      </Button>
+                    </th>
+                    <th style={{ width: "5%" }}>
+                      <Button
+                        variant="danger"
+                        onClick={handleDeleteAll}
+                      >
+                        <div className="d-flex align-items-center justify-content-center gap-2">DeleteSelected</div>
+                      </Button>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -107,7 +164,9 @@ const InvoiceList = () => {
                       invoice={invoice}
                       navigate={navigate}
                       onCheckboxChange={handleCheckboxChange}
-                      selectedInvoices = {selectedInvoices}                       
+                      selectedInvoices={selectedInvoices}
+                      checkAll ={checkAll}
+                      invoiceList={invoiceList}
                     />
                   ))}
                 </tbody>
@@ -120,16 +179,19 @@ const InvoiceList = () => {
   );
 };
 
-const InvoiceRow = ({ invoice, navigate, onCheckboxChange, selectedInvoices }) => {
+const InvoiceRow = ({ invoice, navigate, onCheckboxChange, selectedInvoices, }) => {
   const [isOpen, setIsOpen] = useState(false);
+
   function handleChange(e) {
-    onCheckboxChange(e, invoice.id) 
+    
+    onCheckboxChange(e.target.checked, invoice.id) 
   }
   const dispatch = useDispatch();
 
   const handleDeleteClick = (invoiceId) => {
     dispatch(deleteInvoice(invoiceId));
   };
+
 
   const handleEditClick = () => {
     navigate(`/edit/${invoice.id}`);

@@ -14,6 +14,7 @@ import { addInvoice, updateInvoice } from "../redux/invoicesSlice";
 import { Link, useParams, useLocation, useNavigate } from "react-router-dom";
 import generateRandomId from "../utils/generateRandomId";
 import { useInvoiceListData } from "../redux/hooks";
+import DynamicDropdown from "./DynamicDropdown";
 
 const InvoiceForm = () => {
   const dispatch = useDispatch();
@@ -22,13 +23,24 @@ const InvoiceForm = () => {
   const navigate = useNavigate();
   const isCopy = location.pathname.includes("create");
   const isEdit = location.pathname.includes("edit");
+  const isMultiEdit = location.pathname.includes("multiEdit");
 
+  
   const [isOpen, setIsOpen] = useState(false);
   const [copyId, setCopyId] = useState("");
-  const { getOneInvoice, listSize } = useInvoiceListData();
+  const { getOneInvoice, listSize, getMultipleInvoices } = useInvoiceListData();
+  const [selectedInvoices, setSelectedInvoices] = useState([]);
+
+
   const [formData, setFormData] = useState(
     isEdit
       ? getOneInvoice(params.id)
+      : isMultiEdit
+      ? (() => {
+          const invoiceIds = params.id.split(",");
+          const invoices = getMultipleInvoices(invoiceIds);
+          return invoices[0]
+        })()
       : isCopy && params.id
       ? {
           ...getOneInvoice(params.id),
@@ -65,6 +77,21 @@ const InvoiceForm = () => {
           ],
         }
   );
+
+useEffect(() => {
+  if (isMultiEdit) {
+    console.log(formData);
+    const invoiceIds = params.id.split(",");
+    const invoices = getMultipleInvoices(invoiceIds);
+    
+   
+    
+      setSelectedInvoices(invoices);
+      console.log(selectedInvoices);
+      console.log(formData);
+    
+  }
+}, []);
 
   useEffect(() => {
     handleCalculateTotal();
@@ -140,9 +167,20 @@ const InvoiceForm = () => {
   };
 
   const editField = (name, value) => {
-    setFormData({ ...formData, [name]: value });
+    
+       setFormData({ ...formData, [name]: value });
+  
     handleCalculateTotal();
   };
+  
+  const updateValues = ({target, data}) => {
+    console.log(target,data);
+    setSelectedInvoices((prevData) =>
+      prevData.map((prev) => ({ ...prev, [target]: data }))
+    );
+    console.log(selectedInvoices);
+
+  }
 
   const onCurrencyChange = (selectedOption) => {
     setFormData({ ...formData, currency: selectedOption.currency });
@@ -211,7 +249,7 @@ const InvoiceForm = () => {
                   <span className="fw-bold d-block me-2">Due&nbsp;Date:</span>
                   <Form.Control
                     type="date"
-                    value={formData.dateOfIssue}
+                    value={(isMultiEdit?"":selectedInvoices.dateOfIssue)}
                     name="dateOfIssue"
                     onChange={(e) => editField(e.target.name, e.target.value)}
                     style={{ maxWidth: "150px" }}
@@ -222,32 +260,43 @@ const InvoiceForm = () => {
               <div className="d-flex flex-row align-items-center">
                 <span className="fw-bold me-2">Invoice&nbsp;Number:&nbsp;</span>
                 <Form.Control
-                  type="number"
-                  value={formData.invoiceNumber}
+                  type="text"  
+                  value={isMultiEdit ? (console.log(selectedInvoices),selectedInvoices.map((invoice) => invoice.invoiceNumber).join(",") ): formData.invoiceNumber}
                   name="invoiceNumber"
                   onChange={(e) => editField(e.target.name, e.target.value)}
-                  min="1"
                   style={{ maxWidth: "70px" }}
-                  required
-                />
+                  readOnly={isMultiEdit} 
+              />
               </div>
             </div>
             <hr className="my-4" />
             <Row className="mb-5">
               <Col>
                 <Form.Label className="fw-bold">Bill to:</Form.Label>
-                <Form.Control
-                  placeholder="Who is this invoice to?"
-                  rows={3}
-                  value={formData.billTo}
-                  type="text"
-                  name="billTo"
-                  className="my-2"
-                  onChange={(e) => editField(e.target.name, e.target.value)}
-                  autoComplete="name"
-                  required
-                />
-                <Form.Control
+                {isMultiEdit ? (
+                  console.log(selectedInvoices),
+                  <DynamicDropdown invoicesData= {selectedInvoices} newValues = {updateValues} name ="billTo"/>
+                ) : 
+                (
+                  <Form.Control
+                    placeholder="Who is this invoice to?"
+                    rows={3}
+                    value={formData.billTo}
+                    type="text"
+                    name="billTo"
+                    className="my-2"
+                    onChange={(e) => editField(e.target.name, e.target.value)}
+                    autoComplete="name"
+                    required
+                  />
+                )
+              }
+              {isMultiEdit ? (
+                  console.log(selectedInvoices),
+                  <DynamicDropdown invoicesData= {selectedInvoices} newValues = {updateValues} name ="billToEmail"/>
+                ) : 
+                (
+                  <Form.Control
                   placeholder="Email address"
                   value={formData.billToEmail}
                   type="email"
@@ -257,7 +306,14 @@ const InvoiceForm = () => {
                   autoComplete="email"
                   required
                 />
-                <Form.Control
+                )
+              }
+                {isMultiEdit ? (
+                  console.log(selectedInvoices),
+                  <DynamicDropdown invoicesData= {selectedInvoices} newValues = {updateValues} name ="billToAddress"/>
+                ) : 
+                (
+                  <Form.Control
                   placeholder="Billing address"
                   value={formData.billToAddress}
                   type="text"
@@ -267,10 +323,19 @@ const InvoiceForm = () => {
                   onChange={(e) => editField(e.target.name, e.target.value)}
                   required
                 />
+                )
+              }
+              
+               
               </Col>
               <Col>
                 <Form.Label className="fw-bold">Bill from:</Form.Label>
-                <Form.Control
+                {isMultiEdit ? (
+                  console.log(selectedInvoices),
+                  <DynamicDropdown invoicesData= {selectedInvoices} newValues = {updateValues} name ="billFrom"/>
+                ) : 
+                (
+                  <Form.Control
                   placeholder="Who is this invoice from?"
                   rows={3}
                   value={formData.billFrom}
@@ -281,7 +346,14 @@ const InvoiceForm = () => {
                   autoComplete="name"
                   required
                 />
-                <Form.Control
+                )
+              }
+                 {isMultiEdit ? (
+                  console.log(selectedInvoices),
+                  <DynamicDropdown invoicesData= {selectedInvoices} newValues = {updateValues} name ="billFromEmail"/>
+                ) : 
+                (
+                  <Form.Control
                   placeholder="Email address"
                   value={formData.billFromEmail}
                   type="email"
@@ -291,7 +363,14 @@ const InvoiceForm = () => {
                   autoComplete="email"
                   required
                 />
-                <Form.Control
+                )
+              }
+               {isMultiEdit ? (
+                  console.log(selectedInvoices),
+                  <DynamicDropdown invoicesData= {selectedInvoices} newValues = {updateValues} name ="billFromAddress"/>
+                ) : 
+                (
+                  <Form.Control
                   placeholder="Billing address"
                   value={formData.billFromAddress}
                   type="text"
@@ -301,6 +380,9 @@ const InvoiceForm = () => {
                   onChange={(e) => editField(e.target.name, e.target.value)}
                   required
                 />
+                )
+              }  
+                
               </Col>
             </Row>
             <InvoiceItem
@@ -370,7 +452,7 @@ const InvoiceForm = () => {
               onClick={handleAddInvoice}
               className="d-block w-100 mb-2"
             >
-              {isEdit ? "Update Invoice" : "Add Invoice"}
+              {isEdit || isMultiEdit ? "Update Invoice" : "Add Invoice"}
             </Button>
             <Button variant="primary" type="submit" className="d-block w-100">
               Review Invoice

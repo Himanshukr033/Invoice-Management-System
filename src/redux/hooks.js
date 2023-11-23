@@ -12,11 +12,20 @@ export const useInvoiceListData = () => {
     );
   };
 
+  const getMultipleInvoices = (receivedIds) => {
+    return receivedIds.map((receivedId) =>
+      invoiceList.find(
+        (invoice) => invoice.id.toString() === receivedId.toString()
+      ) || null
+    );
+  };
+
   const listSize = invoiceList.length;
 
   return {
     invoiceList,
     getOneInvoice,
+    getMultipleInvoices,
     listSize,
   };
 };
