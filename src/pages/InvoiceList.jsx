@@ -11,6 +11,7 @@ import { deleteInvoice } from "../redux/invoicesSlice";
 import InputGroup from 'react-bootstrap/InputGroup';
 
 const InvoiceList = () => {
+  const dispatch = useDispatch();
   const { invoiceList, getOneInvoice, getMultipleInvoices } = useInvoiceListData();
   const isListEmpty = invoiceList.length === 0;
   const [copyId, setCopyId] = useState("");
@@ -56,7 +57,9 @@ const InvoiceList = () => {
   };
 
   const handleDeleteAll = ()=>{
-
+    invoiceList.map((invoice) => {
+      if(selectedInvoices.includes(invoice.id))dispatch(deleteInvoice(invoice.id));
+    });  
 
   };
 
