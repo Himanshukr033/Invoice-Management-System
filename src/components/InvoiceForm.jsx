@@ -89,6 +89,7 @@ useEffect(() => {
       setSelectedInvoices(invoices);
     
   }
+  // eslint-disable-next-line
 }, []);
 
   useEffect(() => {

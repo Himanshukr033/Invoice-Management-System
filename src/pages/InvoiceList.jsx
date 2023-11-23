@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Button, Card, Col, Row, Table } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { BiSolidPencil, BiTrash } from "react-icons/bi";
@@ -47,21 +47,22 @@ const InvoiceList = () => {
   }  
   };
   
-  const handleCheckAll = ()=>{
+  const handleCheckAll = () => {
     setCheckAll(prev => !prev);
-    invoiceList.map((invoice) => {
-      console.log(invoice, checkAll);
-      handleCheckboxChange(checkAll, invoice.id);
-    });    
-    
+    invoiceList.forEach(invoice => {
+      handleCheckboxChange(!checkAll, invoice.id);
+    });
   };
+  
 
-  const handleDeleteAll = ()=>{
-    invoiceList.map((invoice) => {
-      if(selectedInvoices.includes(invoice.id))dispatch(deleteInvoice(invoice.id));
-    });  
-
+  const handleDeleteAll = () => {
+    invoiceList.forEach((invoice) => {
+      if (selectedInvoices.includes(invoice.id)) {
+        dispatch(deleteInvoice(invoice.id));
+      }
+    });
   };
+  
 
   const handleCheckboxChange  = (e,invoiceId) => {
     let isSelected = e;

@@ -11,6 +11,7 @@ const DynamicDropdown = ({invoicesData, newValues, name}) => {
       
         useEffect(() => {
             newValues({target:name, data:newData}) 
+            // eslint-disable-next-line
           }, [newData])
 
 
